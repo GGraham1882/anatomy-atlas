@@ -390,3 +390,17 @@ body {
 @media (max-width: 900px) {
   .details { padding: 10px 20px; }
 }
+
+/* Blood oxygenation and heart-specific strokes */
+
+.structure.deoxy { fill: #4d76a6; }
+.structure.stroked.deoxy { fill: none; stroke: var(--vein); }
+
+.structure.stroked.wide { stroke-width: 7; }
+
+.structure.stroked.valve {
+  stroke: var(--bone);
+  stroke-width: 5;
+  stroke-linecap: butt;
+  stroke-dasharray: 5 3;
+}

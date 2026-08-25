@@ -1,5 +1,5 @@
 import { SYSTEMS, STRUCTURES, SILHOUETTE } from "./data.js?v=2";
-import { DETAILS } from "./details.js?v=3";
+import { DETAILS } from "./details.js?v=7";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const MIDLINE = 200;
@@ -174,9 +174,14 @@ function drawStructures() {
       path.dataset.id = structure.id;
       path.classList.add("structure", `sys-${structure.system}`);
       if (structure.stroke) path.classList.add("stroked");
-      if (structure.stroke && structure.system === "circulatory") {
-        path.classList.add(structure.vein ? "vein" : "artery");
+      // Deoxygenated blood is drawn blue by convention — including the
+      // pulmonary trunk, which is an artery but carries spent blood.
+      if (structure.blue) path.classList.add("deoxy");
+      else if (structure.stroke && structure.system === "circulatory") {
+        path.classList.add("artery");
       }
+      if (structure.wide) path.classList.add("wide");
+      if (structure.valve) path.classList.add("valve");
 
       const transforms = [];
       if (side === "right") transforms.push(`translate(${MIDLINE * 2} 0) scale(-1 1)`);

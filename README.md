@@ -1,9 +1,9 @@
 # Atlas
 
-An interactive guide to human anatomy. Six body systems, two zoomed detail
-views, over a hundred structures, and a quiz mode that asks you to find them.
-Everything is drawn as hand-authored SVG — no images, no libraries, no build
-step.
+An interactive guide to human anatomy. Six body systems, seven zoomed detail
+views, and around two hundred individually named structures, with a quiz mode
+that asks you to find them. Everything is drawn as hand-authored or generated
+SVG — no images, no libraries, no build step.
 
 Built by [Graham Connell](https://grahamconnell.net) with Claude Code.
 
@@ -23,10 +23,21 @@ switch to quiz mode and find out what you actually know.
 - **Six systems** — skeletal, muscular, circulatory, respiratory, digestive and
   urinary, and nervous — each drawn over the same figure and tinted the way a
   printed anatomical plate would be.
-- **Detail views** for regions the full-body figure cannot resolve. The
-  dentition view carries all 32 permanent teeth, individually clickable and
-  numbered in the Universal system; the hand view carries all 27 bones of the
-  hand and wrist by name.
+- **Seven detail views** for regions the full-body figure cannot resolve:
+
+  | View | Contents |
+  | --- | --- |
+  | Dentition | All 32 permanent teeth, numbered in the Universal system |
+  | Hand & wrist | All 27 bones, carpals through distal phalanges |
+  | Foot & ankle | All 26 bones, tarsals through phalanges |
+  | Skull | 12 bones and sutures, anterior view |
+  | Spine | 24 vertebrae named C1–L5, plus sacrum and coccyx |
+  | Brain | Four lobes, cerebellum, and the three-part brainstem |
+  | Heart | Four chambers, four valves, and the great vessels |
+
+- **Blood is coloured by oxygenation** in the heart view, so the right side and
+  the pulmonary trunk are blue and the left side and pulmonary veins are red —
+  the pulmonary trunk being the artery that carries spent blood.
 - **Click any structure** for its name, Latin name where it has one, and a short
   explanation of what it does and why it matters.
 - **Quiz mode** names a structure and asks you to find it, marking your answer

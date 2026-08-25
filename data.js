@@ -197,7 +197,7 @@ export const STRUCTURES = [
   {
     id: "jugular", name: "Jugular veins", latin: "Venae jugulares", system: "circulatory", mirror: true,
     type: "path", d: "M196 208 L194 178 C193 162 192 148 192 138",
-    label: [206, 168], stroke: true, vein: true,
+    label: [206, 168], stroke: true, blue: true,
     text: "The veins draining blood from the head and neck back to the heart. Their visible pulsation in the neck is used clinically to estimate pressure in the right side of the heart."
   },
 

@@ -1,3 +1,5 @@
+import { buildRegions } from "./regions.js?v=5";
+
 // Detail views: zoomed diagrams for regions where the full-body figure cannot
 // carry enough resolution. Each has its own viewBox and its own structures,
 // which behave exactly like the ones on the main figure — clickable, labelled,
@@ -209,7 +211,7 @@ function describeHandBone(digit, index, total) {
 }
 
 // A rounded bone shaft drawn between two points.
-function capsule(x1, y1, x2, y2, w) {
+export function capsule(x1, y1, x2, y2, w) {
   const angle = Math.atan2(y2 - y1, x2 - x1);
   const nx = Math.cos(angle + Math.PI / 2) * w;
   const ny = Math.sin(angle + Math.PI / 2) * w;
@@ -232,7 +234,7 @@ function boneCentre(d) {
   return [mean(xs), mean(ys)];
 }
 
-export const DETAILS = [
+const LOCAL_DETAILS = [
   {
     id: "dentition",
     name: "Dentition",
@@ -252,3 +254,6 @@ export const DETAILS = [
     structures: buildHand()
   }
 ];
+
+// Skeletal details lead, then the organ views, each grouped under its system.
+export const DETAILS = [...LOCAL_DETAILS, ...buildRegions(capsule)];
