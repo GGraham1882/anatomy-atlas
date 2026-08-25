@@ -1,19 +1,24 @@
-import { SYSTEMS, STRUCTURES, SILHOUETTE } from "./data.js";
+import { SYSTEMS, STRUCTURES, SILHOUETTE } from "./data.js?v=2";
+import { DETAILS } from "./details.js?v=3";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const MIDLINE = 200;
+const BODY_VIEWBOX = "0 0 400 900";
 
 const el = {
+  figure: document.getElementById("figure"),
   systems: document.getElementById("systems"),
+  details: document.getElementById("details"),
   structures: document.getElementById("structures"),
   labels: document.getElementById("labels"),
   silhouette: document.getElementById("silhouette"),
+  backdrop: document.querySelector("#figure rect"),
   panel: document.getElementById("panelInner"),
   quizToggle: document.getElementById("quizToggle")
 };
 
 let currentSystem = SYSTEMS[0].id;
-let selectedId = null;
+let currentDetail = null;
 let quiz = null;
 
 drawSilhouette();
@@ -38,7 +43,7 @@ function drawSilhouette() {
   });
 }
 
-// ---------- System tabs ----------
+// ---------- Navigation ----------
 
 SYSTEMS.forEach((system) => {
   const tab = document.createElement("button");
@@ -51,35 +56,102 @@ SYSTEMS.forEach((system) => {
   el.systems.appendChild(tab);
 });
 
+function detailsFor(systemId) {
+  return DETAILS.filter((d) => d.system === systemId);
+}
+
+function renderDetailNav() {
+  el.details.replaceChildren();
+  const available = detailsFor(currentSystem);
+
+  if (currentDetail) {
+    const back = document.createElement("button");
+    back.className = "detail-chip back";
+    back.type = "button";
+    back.textContent = "← Full body";
+    back.addEventListener("click", () => openDetail(null));
+    el.details.appendChild(back);
+  }
+
+  if (available.length === 0 && !currentDetail) {
+    el.details.hidden = true;
+    return;
+  }
+  el.details.hidden = false;
+
+  if (!currentDetail) {
+    const hint = document.createElement("span");
+    hint.className = "detail-hint";
+    hint.textContent = "Zoom in:";
+    el.details.appendChild(hint);
+  }
+
+  available.forEach((detail) => {
+    const chip = document.createElement("button");
+    chip.className = "detail-chip";
+    chip.type = "button";
+    chip.textContent = detail.name;
+    chip.setAttribute("aria-pressed", String(currentDetail?.id === detail.id));
+    chip.addEventListener("click", () => openDetail(detail.id));
+    el.details.appendChild(chip);
+  });
+}
+
 function selectSystem(id, { updateHash = true } = {}) {
   currentSystem = id;
-  selectedId = null;
+  currentDetail = null;
   [...el.systems.children].forEach((tab) =>
     tab.setAttribute("aria-selected", String(tab.dataset.system === id))
   );
-  if (updateHash && window.location.hash.slice(1) !== id) {
-    history.replaceState(null, "", `#${id}`);
-  }
-  drawSystem();
+  if (updateHash) setHash(id);
+  refresh();
+}
+
+function openDetail(id) {
+  currentDetail = id ? DETAILS.find((d) => d.id === id) : null;
+  setHash(currentDetail ? `${currentSystem}/${currentDetail.id}` : currentSystem);
+  refresh();
+}
+
+function refresh() {
+  renderDetailNav();
+  el.figure.setAttribute("viewBox", currentDetail ? currentDetail.viewBox : BODY_VIEWBOX);
+  el.silhouette.style.display = currentDetail ? "none" : "";
+  el.backdrop.style.display = currentDetail ? "none" : "";
+  drawStructures();
   if (quiz) startQuestion();
-  else showSystemPanel();
+  else showOverviewPanel();
 }
 
-// Deep links: /anatomy/#nervous opens straight to that system.
-function systemFromHash() {
-  const id = decodeURIComponent(window.location.hash.slice(1));
-  return SYSTEMS.some((s) => s.id === id) ? id : null;
+// ---------- Hash routing ----------
+
+function setHash(value) {
+  if (window.location.hash.slice(1) !== value) {
+    history.replaceState(null, "", `#${value}`);
+  }
 }
 
-window.addEventListener("hashchange", () => {
-  const id = systemFromHash();
-  if (id && id !== currentSystem) selectSystem(id, { updateHash: false });
-});
+function applyHash() {
+  const [systemId, detailId] = decodeURIComponent(window.location.hash.slice(1)).split("/");
+  if (!SYSTEMS.some((s) => s.id === systemId)) return false;
+
+  currentSystem = systemId;
+  currentDetail = detailId ? DETAILS.find((d) => d.id === detailId) || null : null;
+  [...el.systems.children].forEach((tab) =>
+    tab.setAttribute("aria-selected", String(tab.dataset.system === systemId))
+  );
+  refresh();
+  return true;
+}
+
+window.addEventListener("hashchange", applyHash);
 
 // ---------- Drawing ----------
 
 function visibleStructures() {
-  return STRUCTURES.filter((s) => s.system === currentSystem);
+  return currentDetail
+    ? currentDetail.structures
+    : STRUCTURES.filter((s) => s.system === currentSystem);
 }
 
 // Solid organs are painted first so vessels, nerves, and airways drawn as
@@ -88,7 +160,7 @@ function drawOrder(list) {
   return [...list].sort((a, b) => Number(Boolean(a.stroke)) - Number(Boolean(b.stroke)));
 }
 
-function drawSystem() {
+function drawStructures() {
   el.structures.replaceChildren();
   el.labels.replaceChildren();
 
@@ -105,9 +177,11 @@ function drawSystem() {
       if (structure.stroke && structure.system === "circulatory") {
         path.classList.add(structure.vein ? "vein" : "artery");
       }
-      if (side === "right") {
-        path.setAttribute("transform", `translate(${MIDLINE * 2} 0) scale(-1 1)`);
-      }
+
+      const transforms = [];
+      if (side === "right") transforms.push(`translate(${MIDLINE * 2} 0) scale(-1 1)`);
+      if (structure.transform) transforms.push(structure.transform);
+      if (transforms.length) path.setAttribute("transform", transforms.join(" "));
 
       const title = document.createElementNS(SVG_NS, "title");
       title.textContent = structure.name;
@@ -123,9 +197,12 @@ function drawLabel(structure) {
   el.labels.replaceChildren();
   if (!structure || !structure.label) return;
 
+  const box = (currentDetail ? currentDetail.viewBox : BODY_VIEWBOX).split(/\s+/).map(Number);
+  const [minX, , width] = box;
   const [x, y] = structure.label;
-  const toLeft = x < MIDLINE;
-  const endX = toLeft ? 34 : 366;
+  const centre = minX + width / 2;
+  const toLeft = x < centre;
+  const endX = toLeft ? minX + 8 : minX + width - 8;
 
   const line = document.createElementNS(SVG_NS, "line");
   line.setAttribute("x1", x);
@@ -154,53 +231,60 @@ function setActive(id) {
 
 function handleClick(id) {
   if (quiz) return answer(id);
-  selectedId = id;
   setActive(id);
-  const structure = STRUCTURES.find((s) => s.id === id);
+  const structure = visibleStructures().find((s) => s.id === id);
   drawLabel(structure);
   showStructurePanel(structure);
 }
 
-function showSystemPanel() {
+function showOverviewPanel() {
   const system = SYSTEMS.find((s) => s.id === currentSystem);
   const list = visibleStructures();
 
   el.panel.replaceChildren();
-  el.panel.append(
-    node("p", "panel-kicker", "System"),
-    node("h2", null, system.name),
-    node("p", "body", system.blurb),
-    node("p", "hint", "Select any structure on the figure, or choose one below.")
-  );
 
-  const ul = document.createElement("ul");
-  list.forEach((structure) => {
-    const li = document.createElement("li");
-    li.textContent = structure.name;
-    li.addEventListener("click", () => handleClick(structure.id));
-    ul.appendChild(li);
-  });
-  el.panel.appendChild(ul);
+  if (currentDetail) {
+    el.panel.append(
+      node("p", "panel-kicker", `${system.name} · detail`),
+      node("h2", null, currentDetail.name),
+      node("p", "body", currentDetail.caption)
+    );
+  } else {
+    el.panel.append(
+      node("p", "panel-kicker", "System"),
+      node("h2", null, system.name),
+      node("p", "body", system.blurb)
+    );
+  }
+
+  el.panel.append(
+    node("p", "hint", `Select any of the ${list.length} structures on the figure, or choose one below.`)
+  );
+  el.panel.appendChild(structureList(list));
 }
 
 function showStructurePanel(structure) {
+  const system = SYSTEMS.find((s) => s.id === structure.system);
   el.panel.replaceChildren();
   el.panel.append(
-    node("p", "panel-kicker", SYSTEMS.find((s) => s.id === structure.system).name)
+    node("p", "panel-kicker", currentDetail ? `${system.name} · ${currentDetail.name}` : system.name),
+    node("h2", null, structure.name)
   );
-  el.panel.append(node("h2", null, structure.name));
   if (structure.latin) el.panel.append(node("p", "latin", structure.latin));
   el.panel.append(node("p", "body", structure.text));
+  el.panel.appendChild(structureList(visibleStructures(), structure.id));
+}
 
+function structureList(list, activeId) {
   const ul = document.createElement("ul");
-  visibleStructures().forEach((other) => {
+  list.forEach((item) => {
     const li = document.createElement("li");
-    li.textContent = other.name;
-    if (other.id === structure.id) li.style.color = "var(--amber-bright)";
-    li.addEventListener("click", () => handleClick(other.id));
+    li.textContent = item.name;
+    if (item.id === activeId) li.style.color = "var(--amber-bright)";
+    li.addEventListener("click", () => handleClick(item.id));
     ul.appendChild(li);
   });
-  el.panel.appendChild(ul);
+  return ul;
 }
 
 // ---------- Quiz mode ----------
@@ -220,7 +304,7 @@ function endQuiz() {
   el.quizToggle.textContent = "Test yourself";
   clearMarks();
   el.labels.replaceChildren();
-  showSystemPanel();
+  showOverviewPanel();
 }
 
 function startQuestion() {
@@ -268,7 +352,7 @@ function renderQuizPanel(result, guessedId) {
   if (quiz.target.latin) el.panel.append(node("p", "latin", quiz.target.latin));
 
   if (result) {
-    const guessed = STRUCTURES.find((s) => s.id === guessedId);
+    const guessed = visibleStructures().find((s) => s.id === guessedId);
     const message =
       result === "good"
         ? "Correct."
@@ -306,4 +390,4 @@ function node(tag, className, text) {
   return element;
 }
 
-selectSystem(systemFromHash() || SYSTEMS[0].id);
+if (!applyHash()) selectSystem(SYSTEMS[0].id);

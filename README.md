@@ -1,8 +1,9 @@
 # Atlas
 
-An interactive guide to human anatomy. Six body systems, roughly fifty
-structures, and a quiz mode that asks you to find them. Everything is drawn as
-hand-authored SVG — no images, no libraries, no build step.
+An interactive guide to human anatomy. Six body systems, two zoomed detail
+views, over a hundred structures, and a quiz mode that asks you to find them.
+Everything is drawn as hand-authored SVG — no images, no libraries, no build
+step.
 
 Built by [Graham Connell](https://grahamconnell.net) with Claude Code.
 
@@ -22,11 +23,16 @@ switch to quiz mode and find out what you actually know.
 - **Six systems** — skeletal, muscular, circulatory, respiratory, digestive and
   urinary, and nervous — each drawn over the same figure and tinted the way a
   printed anatomical plate would be.
+- **Detail views** for regions the full-body figure cannot resolve. The
+  dentition view carries all 32 permanent teeth, individually clickable and
+  numbered in the Universal system; the hand view carries all 27 bones of the
+  hand and wrist by name.
 - **Click any structure** for its name, Latin name where it has one, and a short
   explanation of what it does and why it matters.
 - **Quiz mode** names a structure and asks you to find it, marking your answer
   and tracking running accuracy.
-- **Deep links** — `#nervous` opens straight to that system.
+- **Deep links** — `#nervous` opens a system, `#skeletal/dentition` opens a
+  detail view.
 - Bilateral structures are authored once and mirrored across the midline, so the
   data stays about half the size it would otherwise be.
 
