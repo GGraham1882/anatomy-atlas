@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atlas — an interactive guide to human anatomy</title>
+  <meta name="description" content="An interactive atlas of the human body. Explore six anatomical systems, click any structure to learn what it does, then test yourself.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="masthead">
+    <div class="masthead-title">
+      <h1>Atlas</h1>
+      <p>An interactive guide to human anatomy</p>
+    </div>
+    <button class="quiz-toggle" id="quizToggle" type="button">Test yourself</button>
+  </header>
+
+  <nav class="systems" id="systems" aria-label="Body systems"></nav>
+
+  <main class="stage">
+    <div class="figure-wrap">
+      <svg id="figure" viewBox="0 0 400 900" role="img" aria-label="Interactive diagram of the human body">
+        <defs>
+          <radialGradient id="glow" cx="50%" cy="42%" r="62%">
+            <stop offset="0%" stop-color="#1d2a35"/>
+            <stop offset="100%" stop-color="#0d1319"/>
+          </radialGradient>
+        </defs>
+        <rect x="0" y="0" width="400" height="900" fill="url(#glow)"/>
+        <g id="silhouette"></g>
+        <g id="structures"></g>
+        <g id="labels"></g>
+      </svg>
+    </div>
+
+    <aside class="panel" id="panel">
+      <div class="panel-inner" id="panelInner"></div>
+    </aside>
+  </main>
+
+  <footer class="foot">
+    <p>Built by <a href="https://grahamconnell.net">Graham Connell</a> with Claude Code ·
+      <a href="https://github.com/GGraham1882/anatomy-atlas">Source on GitHub</a></p>
+    <p class="disclaimer">An educational reference, simplified for clarity. Not medical advice.</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
